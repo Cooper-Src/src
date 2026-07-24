@@ -6,12 +6,11 @@
 namespace src
 {
     class Git
-    {
-    public:
-        bool clone(const std::string& url);
+{
+public:
+    bool clone(const std::string& url);
 
-    private:
-        std::filesystem::path packageDirectory() const;
-        std::string repositoryName(const std::string& url) const;
-    };
+    static bool isRepositoryUrl(const std::string& input);
+    static std::string repositoryName(const std::string& url);
+};
 }

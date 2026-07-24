@@ -1,0 +1,27 @@
+# Build output
+build/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.opendb
+
+# MSVC
+*.obj
+*.pdb
+*.ilk
+*.idb
+*.exe
+
+# User files
+*.user
+*.suo
+
+# Logs
+*.log

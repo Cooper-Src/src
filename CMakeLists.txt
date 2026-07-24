@@ -15,7 +15,20 @@ add_executable(src
     src/app.cpp
     src/command.cpp
     src/git.cpp
+    src/paths.cpp
+    src/package_manifest.cpp
+    src/manifest_parser.cpp
+    src/string_utils.cpp
+    src/registry.cpp
+
+    include/app.hpp
+    include/command.hpp
+    include/git.hpp
+    include/paths.hpp
+    include/package_manifest.hpp
+    include/manifest_parser.hpp
 )
+
 target_include_directories(src
     PRIVATE
         include
