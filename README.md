@@ -14,12 +14,16 @@ Its responsibility is to retrieve source code. Building, compiling, and integrat
 
 ## Features
 
-* Pull source code directly from Git repositories.
+* Install packages from the src registry.
+* Clone source code directly from Git repositories.
+* Custom `.src` package manifest format.
+* List installed packages.
+* Update installed packages.
+* Remove installed packages.
 * Store repositories in a central package cache.
 * Lightweight and fast.
 * No build system integration.
 * No dependency on a specific compiler.
-* Designed to grow with a future package registry.
 
 ## Current Status
 
@@ -27,9 +31,15 @@ Its responsibility is to retrieve source code. Building, compiling, and integrat
 
 Implemented features:
 
-* `pull <git-url>`
-* `help`
-* `version`
+* pull <package>
+* pull <git-url>
+* list
+* update
+* remove
+* help
+* version
+* Custom `.src` manifest parser
+* Package registry
 
 Planned features:
 
@@ -40,24 +50,36 @@ Planned features:
 * Package registry
 * `pull <package>`
 
-## Example
+## Examples
 
-Pull a repository directly from GitHub:
+Install from the registry:
+
+```bash
+src pull raylib
+```
+
+Clone directly from Git:
 
 ```bash
 src pull https://github.com/raysan5/raylib.git
 ```
 
-Repositories are currently stored under:
+List installed packages:
 
-```text
-%LOCALAPPDATA%\src\packages\
+```bash
+src list
 ```
 
-Example:
+Update a package:
 
-```text
-C:\Users\<username>\AppData\Local\src\packages\raylib\
+```bash
+src update raylib
+```
+
+Remove a package:
+
+```bash
+src remove raylib
 ```
 
 ## Project Goals
@@ -67,31 +89,52 @@ C:\Users\<username>\AppData\Local\src\packages\raylib\
 * Store source code in a predictable location.
 * Make downloading source code as easy as possible.
 
-## Roadmap
-
 ### v0.1
 
-* Project foundation
-* Command system
-* Git repository cloning
-* Local package storage
+- Project foundation
+- Command system
+- Git repository cloning
+- Local package storage
 
 ### v0.2
 
-* Package registry
-* `.src` manifest parser
-* Pull by package name
+- Package registry
+- `.src` manifest parser
+- Pull by package name
+- Package listing
+- Package updating
+- Package removal
+
+### v0.3
+
+- Registry search
+- Dependency resolution
+- Package metadata
+- Improved manifest validation
 
 ### Future
 
-* Cross-platform support
-* Community package registry
-* Improved package discovery
+- Cross-platform support
+- Community registries
+- Multiple registry support
 
 ## Contributing
 
 Contributions, bug reports, feature requests, and suggestions are welcome as the project evolves.
 
 ## License
+
+## Architecture
+
+src is composed of several small components:
+
+- Command system
+- Registry
+- Manifest parser
+- Git interface
+- Package manifest model
+- Path management
+
+Each component has a single responsibility, making the project easy to extend and maintain.
 
 This project is licensed under the MIT License.
