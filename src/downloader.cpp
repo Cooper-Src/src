@@ -10,7 +10,6 @@
 
 namespace
 {
-    double lastSpeed = 0.0;
     size_t writeCallback(
         void *contents,
         size_t size,
@@ -179,18 +178,6 @@ namespace src
                          file);
 
         CURLcode result = curl_easy_perform(curl);
-        curl_off_t downloaded = 0;
-        curl_off_t total = 0;
-
-        curl_easy_getinfo(curl, CURLINFO_SIZE_DOWNLOAD_T, &downloaded);
-        curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &total);
-
-        progress.bar.update(
-            static_cast<std::uint64_t>(downloaded),
-            static_cast<std::uint64_t>(total),
-            progress.lastSpeed);
-        progress.totalBytes =
-            static_cast<std::uint64_t>(total);
         long status = 0;
 
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);

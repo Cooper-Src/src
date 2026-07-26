@@ -9,11 +9,11 @@ namespace src
     {
     public:
         bool download(
-            const std::string& url,
-            std::string& data);
+            const std::string &url,
+            std::string &data);
 
         bool downloadFile(
-            const std::string& url,
-            const std::filesystem::path& destination);
+            const std::string &url,
+            const std::filesystem::path &destination);
     };
 }

@@ -71,21 +71,47 @@ namespace src
 
         constexpr int width = 40;
 
-        int filled =
-            static_cast<int>(percent * width / 100.0);
-
         std::string bar;
 
         for (int i = 0; i < width; ++i)
         {
-            bar += (i < filled) ? "█" : "─";
+            bar += "─";
         }
 
+        if (total > 0)
+        {
+            int filled =
+                static_cast<int>(percent * width / 100.0);
+
+            for (int i = 0; i < filled; ++i)
+            {
+                bar.replace(i * 3, 3, "█");
+            }
+        }
+        else
+        {
+            constexpr int blockWidth = 5;
+
+            int start =
+                static_cast<int>(animationFrame % width);
+
+            for (int i = 0; i < blockWidth; ++i)
+            {
+                int pos = (start + i) % width;
+                bar.replace(pos * 3, 3, "█");
+            }
+
+            animationFrame =
+                static_cast<std::size_t>(
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        now.time_since_epoch())
+                        .count() /
+                    80);
+        }
         std::ostringstream line;
 
         double downloadedMB = toMB(static_cast<double>(downloaded));
         double totalMB = toMB(static_cast<double>(total));
-        bool totalKnown = total > 0;
 
         // Force the last frame to show identical values
         if (downloaded >= total && total > 0)
@@ -97,22 +123,26 @@ namespace src
         lastTotal = total;
         lastSpeed = speed;
 
-        line << '[' << bar << "] "
-             << std::setw(3)
-             << static_cast<int>(percent)
-             << "%  "
-             << std::fixed
-             << std::setprecision(1)
-             << downloadedMB
-             << " MB / ";
+        line << '[' << bar << "] ";
 
         if (total > 0)
         {
-            line << totalMB << " MB";
+            line << std::setw(3)
+                 << static_cast<int>(percent)
+                 << "%  "
+                 << std::fixed
+                 << std::setprecision(1)
+                 << downloadedMB
+                 << " MB / "
+                 << totalMB
+                 << " MB";
         }
         else
         {
-            line << "Unknown";
+            line << std::fixed
+                 << std::setprecision(1)
+                 << downloadedMB
+                 << " MB";
         }
 
         line << "  "
@@ -128,6 +158,7 @@ namespace src
     void DownloadProgress::finish()
     {
         update(lastDownloaded, lastTotal, lastSpeed);
+        animationFrame = 0;
         std::cout << '\n';
     }
 }

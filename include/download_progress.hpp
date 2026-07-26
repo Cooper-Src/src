@@ -16,7 +16,7 @@ namespace src
             double speed);
 
         void finish();
-
+        std::size_t animationFrame = 0;
     private:
         bool started = false;
 

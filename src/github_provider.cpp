@@ -1,8 +1,10 @@
 #include "github_provider.hpp"
 #include "downloader.hpp"
 
-#include <nlohmann/json.hpp>
 #include <iostream>
+
+#include <curl/curl.h>
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
 
@@ -51,46 +53,45 @@ namespace src
         const std::string &repo,
         const std::string &branch)
     {
-        return "https://github.com/" +
+        return "https://codeload.github.com/" +
                owner +
                "/" +
                repo +
-               "/archive/refs/heads/" +
-               branch +
-               ".zip";
+               "/zip/refs/heads/" +
+               branch;
     }
+
     bool GitHubProvider::defaultBranch(
-    const std::string& owner,
-    const std::string& repo,
-    std::string& branch)
-{
-    Downloader downloader;
-
-    std::string data;
-
-    std::string url =
-        "https://api.github.com/repos/" +
-        owner +
-        "/" +
-        repo;
-
-
-    if (!downloader.download(url, data))
+        const std::string &owner,
+        const std::string &repo,
+        std::string &branch)
     {
-        std::cout << "Download failed\n";
-        return false;
+        Downloader downloader;
+
+        std::string data;
+
+        std::string url =
+            "https://api.github.com/repos/" +
+            owner +
+            "/" +
+            repo;
+
+        if (!downloader.download(url, data))
+        {
+            std::cout << "Download failed\n";
+            return false;
+        }
+
+        json response = json::parse(data);
+
+        if (!response.contains("default_branch"))
+        {
+            std::cout << "default_branch not found\n";
+            return false;
+        }
+
+        branch = response["default_branch"].get<std::string>();
+
+        return true;
     }
-
-    json response = json::parse(data);
-
-    if (!response.contains("default_branch"))
-    {
-        std::cout << "default_branch not found\n";
-        return false;
-    }
-
-    branch = response["default_branch"].get<std::string>();
-
-    return true;
-}
 }

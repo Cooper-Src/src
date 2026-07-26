@@ -40,23 +40,25 @@ namespace src
 
         std::cout << "Downloading " << manifest.name << "...\n\n";
 
-        if (!downloader.downloadFile(archiveUrl, archive))
+        if (!downloader.downloadFile(
+                archiveUrl,
+                archive))
         {
             std::cout << "Failed to download archive.\n";
             return false;
         }
 
-        char* localAppData = nullptr;
-size_t len = 0;
+        char *localAppData = nullptr;
+        size_t len = 0;
 
-_dupenv_s(&localAppData, &len, "LOCALAPPDATA");
+        _dupenv_s(&localAppData, &len, "LOCALAPPDATA");
 
-std::filesystem::path packages =
-    std::filesystem::path(localAppData) /
-    "src" /
-    "packages";
+        std::filesystem::path packages =
+            std::filesystem::path(localAppData) /
+            "src" /
+            "packages";
 
-free(localAppData);
+        free(localAppData);
 
         std::filesystem::path installPath =
             packages / manifest.name;

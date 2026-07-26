@@ -84,7 +84,7 @@ Packages are stored in:
     }
     int Command::version()
     {
-        std::cout << "src v0.1.0\n";
+        std::cout << "src v0.3.0\n";
         return 0;
     }
 
