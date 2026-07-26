@@ -40,7 +40,12 @@ Implemented features:
 * help
 * version
 * Custom `.src` manifest parser
+* `.src` package manifests
 * Package registry
+* `list`
+* `remove`
+* `update`
+* `pull <package>`
 
 Planned features:
 
