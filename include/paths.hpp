@@ -16,5 +16,7 @@ public:
     static void initialize();
     static std::filesystem::path temporaryFile(
     const std::string& name);
+    static std::filesystem::path manifestPath(
+    const std::string& package);
 };
 }

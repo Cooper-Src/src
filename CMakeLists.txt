@@ -28,6 +28,7 @@ add_executable(src
     src/task_progress.cpp
     src/extractor.cpp
     src/miniz.c
+    src/cleanup.cpp
 
     include/app.hpp
     include/command.hpp

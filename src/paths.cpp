@@ -76,4 +76,11 @@ void Paths::initialize()
     return std::filesystem::temp_directory_path() /
            ("src-" + name + ".zip");
 }
+std::filesystem::path Paths::manifestPath(
+    const std::string& package)
+{
+    return registryDirectory() /
+           "manifests" /
+           (package + ".src");
+}
 }

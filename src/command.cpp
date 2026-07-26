@@ -43,6 +43,11 @@ namespace src
         if (command == "registry")
             return registry(arguments);
 
+        if (command == "info")
+        {
+            return Command::info(arguments);
+        }
+
         std::cout << "Unknown command: " << command << '\n';
         return 1;
     }
@@ -88,78 +93,78 @@ Packages are stored in:
         return 0;
     }
 
-   int Command::pull(const std::vector<std::string>& arguments)
-{
-    if (arguments.empty())
+    int Command::pull(const std::vector<std::string> &arguments)
     {
-        std::cout << "Missing package name or repository URL.\n";
-        return 1;
-    }
-
-    Git git;
-    PackageDownloader downloader;
-
-    // Direct repository URL
-    if (Git::isRepositoryUrl(arguments[0]))
-    {
-        std::string repoName = git.repositoryName(arguments[0]);
-
-        auto packagePath =
-            Paths::packageDirectory() / repoName;
-
-        if (std::filesystem::is_directory(packagePath))
+        if (arguments.empty())
         {
-            std::cout << "Package '" << repoName
-                      << "' is already installed.\n";
-            std::cout << "Run 'src update "
-                      << repoName
-                      << "' to update it.\n";
+            std::cout << "Missing package name or repository URL.\n";
             return 1;
         }
 
+        Git git;
+        PackageDownloader downloader;
+
+        // Direct repository URL
+        if (Git::isRepositoryUrl(arguments[0]))
+        {
+            std::string repoName = git.repositoryName(arguments[0]);
+
+            auto packagePath =
+                Paths::packageDirectory() / repoName;
+
+            if (std::filesystem::is_directory(packagePath))
+            {
+                std::cout << "Package '" << repoName
+                          << "' is already installed.\n";
+                std::cout << "Run 'src update "
+                          << repoName
+                          << "' to update it.\n";
+                return 1;
+            }
+
+            PackageManifest manifest;
+            manifest.name = repoName;
+            manifest.sourceUrl = arguments[0];
+
+            if (downloader.install(manifest))
+            {
+                std::cout << "Repository installed successfully.\n";
+                return 0;
+            }
+
+            std::cout << "Failed to install repository.\n";
+            return 1;
+        }
+
+        // Registry package
         PackageManifest manifest;
-        manifest.name = repoName;
-        manifest.sourceUrl = arguments[0];
+
+        if (!Registry::load(arguments[0], manifest))
+        {
+            std::cout << "Package '" << arguments[0]
+                      << "' was not found.\n";
+            return 1;
+        }
+
+        auto packagePath =
+            Paths::packageDirectory() / manifest.name;
+
+        if (std::filesystem::exists(packagePath))
+        {
+            std::cout << "Package '" << manifest.name
+                      << "' is already installed.\n";
+            return 1;
+        }
 
         if (downloader.install(manifest))
         {
-            std::cout << "Repository installed successfully.\n";
+            std::cout << "Package installed successfully.";
             return 0;
         }
 
-        std::cout << "Failed to install repository.\n";
+        std::cout << "Failed to install package.\n";
         return 1;
     }
-
-    // Registry package
-    PackageManifest manifest;
-
-    if (!Registry::load(arguments[0], manifest))
-    {
-        std::cout << "Package '" << arguments[0]
-                  << "' was not found.\n";
-        return 1;
-    }
-
-    auto packagePath =
-        Paths::packageDirectory() / manifest.name;
-
-    if (std::filesystem::exists(packagePath))
-    {
-        std::cout << "Package '" << manifest.name
-                  << "' is already installed.\n";
-        return 1;
-    }
-
-    if (downloader.install(manifest))
-    {
-        std::cout << "Package installed successfully.";
-        return 0;
-    }
-
-    std::cout << "Failed to install package.\n";
-    return 1;
-}
 
     int Command::list()
     {
@@ -227,26 +232,52 @@ Packages are stored in:
         }
     }
 
-    int Command::update(const std::vector<std::string>& arguments)
-{
-    if (arguments.empty())
+    int Command::update(const std::vector<std::string> &arguments)
     {
-        std::cout << "Missing package name.\n";
-        return 1;
+        if (arguments.empty())
+        {
+            std::cout << "Updating all installed packages...\n\n";
+
+            int updated = 0;
+            int failed = 0;
+
+            for (const auto &entry :
+                 std::filesystem::directory_iterator(Paths::packageDirectory()))
+            {
+                if (!entry.is_directory())
+                    continue;
+
+                if (updatePackage(entry.path().filename().string()) == 0)
+                    ++updated;
+                else
+                    ++failed;
+            }
+
+            std::cout << "\nSummary\n";
+            std::cout << "-------\n";
+            std::cout << "Updated : " << updated << '\n';
+            std::cout << "Failed  : " << failed << '\n';
+
+            return failed == 0 ? 0 : 1;
+        }
+
+        return updatePackage(arguments[0]);
     }
 
-    std::cout << "Updating '" << arguments[0] << "'...\n";
-
-    auto package =
-        Paths::packageDirectory() / arguments[0];
-
-    if (std::filesystem::exists(package))
+    int Command::updatePackage(const std::string &packageName)
     {
-        std::filesystem::remove_all(package);
-    }
+        std::cout << "Updating '" << packageName << "'...\n";
 
-    return pull(arguments);
-}
+        auto package =
+            Paths::packageDirectory() / packageName;
+
+        if (std::filesystem::exists(package))
+        {
+            std::filesystem::remove_all(package);
+        }
+
+        return pull({packageName});
+    }
 
     int Command::registry(const std::vector<std::string> &arguments)
     {
@@ -274,5 +305,57 @@ Packages are stored in:
         }
 
         return Registry::search(arguments[0]);
+    }
+    int Command::info(const std::vector<std::string> &arguments)
+    {
+
+        if (arguments.empty())
+        {
+            std::cout << "Missing package name.\n";
+            return 1;
+        }
+
+        auto manifestPath =
+            Paths::registryDirectory() /
+            (arguments[0] + ".src");
+
+        bool installed =
+            std::filesystem::exists(
+                Paths::packageDirectory() / arguments[0]);
+
+        if (!std::filesystem::exists(manifestPath))
+        {
+            std::cout << "Package not found.\n";
+            return 1;
+        }
+        PackageManifest manifest;
+        ManifestParser parser;
+
+        if (!parser.parse(manifestPath, manifest))
+        {
+            std::cout << "Failed to parse manifest.\n";
+            return 1;
+        }
+        std::cout << "Package:     " << manifest.name << '\n';
+        std::cout << "Version:     " << manifest.version << '\n';
+        std::cout << "Description: " << manifest.description << '\n';
+        std::cout << "License:     " << manifest.license << '\n';
+        std::cout << "Homepage:    " << manifest.homepage << '\n';
+        std::cout << "Source:      " << manifest.sourceUrl << '\n';
+        std::cout << '\n';
+
+        if (installed)
+        {
+            std::cout << "Installed:   Yes\n";
+            std::cout << "Location:    "
+                      << (Paths::packageDirectory() / manifest.name).string()
+                      << '\n';
+        }
+        else
+        {
+            std::cout << "Installed:   No\n";
+        }
+
+        return 0;
     }
 }

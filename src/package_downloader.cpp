@@ -3,6 +3,7 @@
 #include "paths.hpp"
 #include "downloader.hpp"
 #include "extractor.hpp"
+#include "cleanup.hpp"
 
 #include <iostream>
 
@@ -47,31 +48,30 @@ namespace src
             std::cout << "Failed to download archive.\n";
             return false;
         }
-
-        char *localAppData = nullptr;
-        size_t len = 0;
-
-        _dupenv_s(&localAppData, &len, "LOCALAPPDATA");
-
-        std::filesystem::path packages =
-            std::filesystem::path(localAppData) /
-            "src" /
-            "packages";
-
-        free(localAppData);
-
-        std::filesystem::path installPath =
-            packages / manifest.name;
+            std::filesystem::path installPath =
+                src::Paths::packageDirectory() / manifest.name;
 
         std::filesystem::create_directories(installPath);
 
         if (!src::Extractor::extractZip(archive, installPath))
         {
+            std::filesystem::remove(archive);
             std::cout << "Failed to extract package.\n";
             return false;
         }
 
+        Cleanup::removeGitFiles(installPath);
+
         std::filesystem::remove(archive);
+
+        return true;
+
+        // Remove .git* files and folders
+        Cleanup::removeGitFiles(installPath);
+
+        std::filesystem::remove(archive);
+
+        std::cout << "Package installed successfully.";
 
         return true;
     }
