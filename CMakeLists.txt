@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(src
     VERSION 0.1.0
     DESCRIPTION "A source retrieval tool"
-    LANGUAGES CXX
+    LANGUAGES C CXX
 )
 
 set(CMAKE_CXX_STANDARD 23)
@@ -20,6 +20,14 @@ add_executable(src
     src/manifest_parser.cpp
     src/string_utils.cpp
     src/registry.cpp
+    src/registry_manager.cpp
+    src/downloader.cpp
+    src/package_downloader.cpp
+    src/github_provider.cpp
+    src/download_progress.cpp
+    src/task_progress.cpp
+    src/extractor.cpp
+    src/miniz.c
 
     include/app.hpp
     include/command.hpp
@@ -27,11 +35,20 @@ add_executable(src
     include/paths.hpp
     include/package_manifest.hpp
     include/manifest_parser.hpp
+
+    
 )
 
-target_include_directories(src
-    PRIVATE
-        include
+target_include_directories(src PRIVATE
+    include
+)
+
+find_package(nlohmann_json CONFIG REQUIRED)
+find_package(CURL CONFIG REQUIRED)
+
+target_link_libraries(src PRIVATE
+    CURL::libcurl
+    nlohmann_json::nlohmann_json
 )
 
 if(MSVC)

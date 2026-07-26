@@ -6,6 +6,8 @@
 #include "string_utils.hpp"
 #include "registry.hpp"
 #include "package_manifest.hpp"
+#include "registry_manager.hpp"
+#include "package_downloader.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -13,12 +15,10 @@
 
 namespace src
 {
+
     int Command::execute(const std::string &command,
                          const std::vector<std::string> &arguments)
     {
-        if (command == "manifest")
-            return manifest(arguments);
-
         if (command == "help")
             return help();
 
@@ -37,14 +37,20 @@ namespace src
         if (command == "update")
             return update(arguments);
 
+        if (command == "search")
+            return search(arguments);
+
+        if (command == "registry")
+            return registry(arguments);
+
         std::cout << "Unknown command: " << command << '\n';
         return 1;
     }
 
     int Command::help()
-{
-    std::cout <<
-R"(src v0.2.0
+    {
+        std::cout <<
+            R"(src v0.2.0
 A lightweight source retrieval tool.
 
 Usage:
@@ -74,66 +80,86 @@ Packages are stored in:
     %LOCALAPPDATA%\src\packages
 )";
 
-    return 0;
-}
+        return 0;
+    }
     int Command::version()
     {
         std::cout << "src v0.1.0\n";
         return 0;
     }
 
-    int Command::pull(const std::vector<std::string> &arguments)
+   int Command::pull(const std::vector<std::string>& arguments)
+{
+    if (arguments.empty())
     {
-        if (arguments.empty())
+        std::cout << "Missing package name or repository URL.\n";
+        return 1;
+    }
+
+    Git git;
+    PackageDownloader downloader;
+
+    // Direct repository URL
+    if (Git::isRepositoryUrl(arguments[0]))
+    {
+        std::string repoName = git.repositoryName(arguments[0]);
+
+        auto packagePath =
+            Paths::packageDirectory() / repoName;
+
+        if (std::filesystem::is_directory(packagePath))
         {
-            std::cout << "Missing package name or repository URL.\n";
+            std::cout << "Package '" << repoName
+                      << "' is already installed.\n";
+            std::cout << "Run 'src update "
+                      << repoName
+                      << "' to update it.\n";
             return 1;
         }
 
-        Git git;
-
-        // Direct repository URL
-        if (Git::isRepositoryUrl(arguments[0]))
-        {
-            std::string repoName = git.repositoryName(arguments[0]);
-
-            auto packagePath =
-                Paths::packageDirectory() / repoName;
-
-            if (std::filesystem::exists(packagePath))
-            {
-                std::cout << "Package '" << repoName
-                          << "' is already installed.\n";
-                std::cout << "Run 'src update "
-                          << repoName
-                          << "' to update it.\n";
-
-                return 1;
-            }
-
-            std::cout << "Failed to clone repository.\n";
-            return 1;
-        }
-
-        // Registry package
         PackageManifest manifest;
+        manifest.name = repoName;
+        manifest.sourceUrl = arguments[0];
 
-        if (!Registry::load(arguments[0], manifest))
+        if (downloader.install(manifest))
         {
-            std::cout << "Package '" << arguments[0]
-                      << "' was not found.\n";
-            return 1;
-        }
-
-        if (git.clone(manifest.sourceUrl))
-        {
-            std::cout << "Package installed successfully.\n";
+            std::cout << "Repository installed successfully.\n";
             return 0;
         }
 
-        std::cout << "Failed to install package.\n";
+        std::cout << "Failed to install repository.\n";
         return 1;
     }
+
+    // Registry package
+    PackageManifest manifest;
+
+    if (!Registry::load(arguments[0], manifest))
+    {
+        std::cout << "Package '" << arguments[0]
+                  << "' was not found.\n";
+        return 1;
+    }
+
+    auto packagePath =
+        Paths::packageDirectory() / manifest.name;
+
+    if (std::filesystem::exists(packagePath))
+    {
+        std::cout << "Package '" << manifest.name
+                  << "' is already installed.\n";
+        return 1;
+    }
+
+    if (downloader.install(manifest))
+    {
+        std::cout << "Package installed successfully.";
+        return 0;
+    }
+
+    std::cout << "Failed to install package.\n";
+    return 1;
+}
 
     int Command::list()
     {
@@ -239,38 +265,31 @@ Packages are stored in:
         return result;
     }
 
-    int Command::manifest(const std::vector<std::string> &arguments)
+    int Command::registry(const std::vector<std::string> &arguments)
     {
         if (arguments.empty())
         {
-            std::cout << "Usage: src manifest <file>\n";
+            std::cout << "Usage: src registry <command>\n";
             return 1;
         }
-
-        PackageManifest manifest;
-
-        if (!ManifestParser::parse(arguments[0], manifest))
+        if (arguments[0] == "update")
         {
-            std::cout << "Failed to parse manifest.\n";
+            RegistryManager manager;
+
+            return manager.update() ? 0 : 1;
+        }
+
+        std::cout << "Unknown registry command.\n";
+        return 1;
+    }
+    int Command::search(const std::vector<std::string> &arguments)
+    {
+        if (arguments.empty())
+        {
+            std::cout << "Missing search query.\n";
             return 1;
         }
 
-        std::cout << "\nPackage Manifest\n";
-        std::cout << "================\n\n";
-
-        std::cout << "Name:        " << manifest.name << '\n';
-        std::cout << "Version:     " << manifest.version << '\n';
-        std::cout << "Description: " << manifest.description << "\n\n";
-
-        std::cout << "Source\n";
-        std::cout << "------\n";
-        std::cout << "Type:        " << manifest.sourceType << '\n';
-        std::cout << "URL:         " << manifest.sourceUrl << '\n';
-        std::cout << "Branch:      " << manifest.sourceBranch << "\n\n";
-
-        std::cout << "License:     " << manifest.license << '\n';
-        std::cout << "Homepage:    " << manifest.homepage << '\n';
-
-        return 0;
+        return Registry::search(arguments[0]);
     }
 }

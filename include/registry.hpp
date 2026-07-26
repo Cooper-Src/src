@@ -11,5 +11,6 @@ namespace src
     public:
         static bool load(const std::string& package,
                          PackageManifest& manifest);
+        static int search(const std::string& query);
     };
 }

@@ -19,6 +19,7 @@ private:
     int remove(const std::vector<std::string>& arguments);
     int update(const std::vector<std::string>& arguments);
 
-    int manifest(const std::vector<std::string>& arguments);
+    int registry(const std::vector<std::string>& arguments);
+    static int search(const std::vector<std::string>& arguments);
 };
 }
