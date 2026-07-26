@@ -227,43 +227,26 @@ Packages are stored in:
         }
     }
 
-    int Command::update(const std::vector<std::string> &arguments)
+    int Command::update(const std::vector<std::string>& arguments)
+{
+    if (arguments.empty())
     {
-        if (arguments.empty())
-        {
-            std::cout << "Missing package name.\n";
-            return 1;
-        }
-
-        const auto package = Paths::packageDirectory() / arguments[0];
-
-        if (!std::filesystem::exists(package))
-        {
-            std::cout << "Package '" << arguments[0]
-                      << "' is not installed.\n";
-            return 1;
-        }
-
-        std::string command =
-            "git -C \"" +
-            package.string() +
-            "\" pull";
-
-        std::cout << "Updating '" << arguments[0] << "'...\n";
-
-        int result = std::system(command.c_str());
-
-        if (result == 0)
-        {
-            std::cout << "Package updated successfully.\n";
-        }
-        else
-        {
-            std::cout << "Failed to update package.\n";
-        }
-
-        return result;
+        std::cout << "Missing package name.\n";
+        return 1;
     }
+
+    std::cout << "Updating '" << arguments[0] << "'...\n";
+
+    auto package =
+        Paths::packageDirectory() / arguments[0];
+
+    if (std::filesystem::exists(package))
+    {
+        std::filesystem::remove_all(package);
+    }
+
+    return pull(arguments);
+}
 
     int Command::registry(const std::vector<std::string> &arguments)
     {
