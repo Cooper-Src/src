@@ -1,5 +1,4 @@
 #include "command.hpp"
-#include "git.hpp"
 #include "paths.hpp"
 #include "manifest_parser.hpp"
 #include "package_manifest.hpp"
@@ -65,7 +64,7 @@ Commands:
     help                         Show this help message
     version                      Show the current version
 
-    pull <package/git-url>       Install a package or clone a Git repository
+    pull <package/>       Install a package
     list                         List installed packages
     update <package>             Update an installed package
     remove <package>             Remove an installed package
@@ -75,8 +74,6 @@ Developer Commands:
 
 Examples:
     src pull raylib
-    src pull https://github.com/raysan5/raylib.git
-
     src list
     src update raylib
     src remove raylib
@@ -97,44 +94,11 @@ Packages are stored in:
     {
         if (arguments.empty())
         {
-            std::cout << "Missing package name or repository URL.\n";
+            std::cout << "Missing package name.\n";
             return 1;
         }
 
-        Git git;
         PackageDownloader downloader;
-
-        // Direct repository URL
-        if (Git::isRepositoryUrl(arguments[0]))
-        {
-            std::string repoName = git.repositoryName(arguments[0]);
-
-            auto packagePath =
-                Paths::packageDirectory() / repoName;
-
-            if (std::filesystem::is_directory(packagePath))
-            {
-                std::cout << "Package '" << repoName
-                          << "' is already installed.\n";
-                std::cout << "Run 'src update "
-                          << repoName
-                          << "' to update it.\n";
-                return 1;
-            }
-
-            PackageManifest manifest;
-            manifest.name = repoName;
-            manifest.sourceUrl = arguments[0];
-
-            if (downloader.install(manifest))
-            {
-                std::cout << "Repository installed successfully.\n";
-                return 0;
-            }
-
-            std::cout << "Failed to install repository.\n";
-            return 1;
-        }
 
         // Registry package
         PackageManifest manifest;
@@ -338,9 +302,9 @@ Packages are stored in:
         std::cout << "Package:     " << manifest.name << '\n';
         std::cout << "Version:     " << manifest.version << '\n';
         std::cout << "Description: " << manifest.description << '\n';
-        std::cout << "License:     " << manifest.license << '\n';
-        std::cout << "Homepage:    " << manifest.homepage << '\n';
-        std::cout << "Source:      " << manifest.sourceUrl << '\n';
+        std::cout << "License:     " << manifest.license.name << '\n';
+        std::cout << "Homepage:    " << manifest.homepage.url << '\n';
+        std::cout << "Source:      " << manifest.source.url << '\n';
         std::cout << '\n';
 
         if (installed)

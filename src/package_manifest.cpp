@@ -5,9 +5,9 @@ namespace src
     bool PackageManifest::valid() const
     {
         return
-            !name.empty() &&
-            !version.empty() &&
-            !sourceType.empty() &&
-            !sourceUrl.empty();
+        !name.empty() &&
+        !source.type.empty() &&
+        !version.empty() &&
+        !source.url.empty();
     }
 }

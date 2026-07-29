@@ -4,6 +4,23 @@
 
 namespace src
 {
+    struct SourceInfo
+    {
+        std::string type;
+        std::string url;
+        std::string format;
+    };
+
+    struct LicenseInfo
+    {
+        std::string name;
+    };
+
+    struct HomepageInfo
+    {
+        std::string url;
+    };
+
     class PackageManifest
     {
     public:
@@ -11,13 +28,10 @@ namespace src
         std::string version;
         std::string description;
 
-        std::string sourceType;
-        std::string sourceUrl;
-        std::string sourceBranch;
+        SourceInfo source;
+        LicenseInfo license;
+        HomepageInfo homepage;
 
-        std::string license;
-
-        std::string homepage;
         bool valid() const;
     };
 }

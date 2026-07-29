@@ -14,7 +14,6 @@ add_executable(src
     src/main.cpp
     src/app.cpp
     src/command.cpp
-    src/git.cpp
     src/paths.cpp
     src/package_manifest.cpp
     src/manifest_parser.cpp
@@ -23,7 +22,6 @@ add_executable(src
     src/registry_manager.cpp
     src/downloader.cpp
     src/package_downloader.cpp
-    src/github_provider.cpp
     src/download_progress.cpp
     src/task_progress.cpp
     src/extractor.cpp
@@ -32,7 +30,6 @@ add_executable(src
 
     include/app.hpp
     include/command.hpp
-    include/git.hpp
     include/paths.hpp
     include/package_manifest.hpp
     include/manifest_parser.hpp

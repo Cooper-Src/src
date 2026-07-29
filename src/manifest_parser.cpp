@@ -67,29 +67,29 @@ namespace src
             {
                 if (key == "type")
                 {
-                    manifest.sourceType = value;
+                    manifest.source.type = value;
                 }
                 else if (key == "url")
                 {
-                    manifest.sourceUrl = value;
+                    manifest.source.url = value;
                 }
                 else if (key == "branch")
                 {
-                    manifest.sourceBranch = value;
+                    manifest.source.format = value;
                 }
             }
             else if (currentSection == "license")
             {
                 if (key == "name")
                 {
-                    manifest.license = value;
+                    manifest.license.name = value;
                 }
             }
             else if (currentSection == "homepage")
             {
                 if (key == "url")
                 {
-                    manifest.homepage = value;
+                    manifest.homepage.url = value;
                 }
             }
         }
