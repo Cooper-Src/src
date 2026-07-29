@@ -27,7 +27,7 @@ add_executable(src
     src/download_progress.cpp
     src/task_progress.cpp
     src/extractor.cpp
-    src/miniz.c
+    third_party/miniz/miniz.c
     src/cleanup.cpp
 
     include/app.hpp
@@ -42,6 +42,7 @@ add_executable(src
 
 target_include_directories(src PRIVATE
     include
+    third_party/miniz
 )
 
 find_package(nlohmann_json CONFIG REQUIRED)

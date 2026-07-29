@@ -48,8 +48,8 @@ namespace src
             std::cout << "Failed to download archive.\n";
             return false;
         }
-            std::filesystem::path installPath =
-                src::Paths::packageDirectory() / manifest.name;
+        std::filesystem::path installPath =
+            src::Paths::packageDirectory() / manifest.name;
 
         std::filesystem::create_directories(installPath);
 
@@ -60,18 +60,12 @@ namespace src
             return false;
         }
 
-        Cleanup::removeGitFiles(installPath);
-
-        std::filesystem::remove(archive);
-
-        return true;
-
         // Remove .git* files and folders
         Cleanup::removeGitFiles(installPath);
 
         std::filesystem::remove(archive);
 
-        std::cout << "Package installed successfully.";
+        std::cout << "\nPackage installed successfully.";
 
         return true;
     }

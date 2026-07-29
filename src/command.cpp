@@ -158,7 +158,6 @@ Packages are stored in:
 
         if (downloader.install(manifest))
         {
-            std::cout << "Package installed successfully.";
             return 0;
         }
 
@@ -219,7 +218,7 @@ Packages are stored in:
             std::uintmax_t removed = std::filesystem::remove_all(package);
 
             std::cout << "Removed '" << arguments[0]
-                      << "' (" << removed << " items deleted).\n";
+                      << "' (" << removed << " items deleted).";
 
             return 0;
         }
