@@ -166,9 +166,9 @@ namespace src
         curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, progressCallback);
         curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &progress);
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 1024L);
+        curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "src/0.1");
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "src/0.3.0");
         curl_easy_setopt(curl,
                          CURLOPT_WRITEFUNCTION,
                          writeFileCallback);

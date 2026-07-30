@@ -60,7 +60,7 @@ Extract archive
         ▼
 Install package
 ```
-
+ 
 No Git repository is cloned.
 
 ---

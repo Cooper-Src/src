@@ -1,5 +1,7 @@
 # Build output
 build/
+installer/
+vcpkg_installed/
 
 # CMake
 CMakeFiles/
@@ -25,3 +27,5 @@ Makefile
 
 # Logs
 *.log
+
+*.bat

@@ -7,7 +7,7 @@ Registries allow packages to be discovered, searched, and installed without embe
 The official registry is maintained using **src-init**.
 
 ---
-
+ 
 # Overview
 
 A registry consists of two components.
