@@ -103,11 +103,6 @@ namespace src
                     fileCount,
                     relative);
             }
-
-            // progress.update(
-            // i + 1,
-            // fileCount,
-            // 0.0);
         }
 
         progress.finish();

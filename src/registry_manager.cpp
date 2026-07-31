@@ -1,10 +1,17 @@
 #include "registry_manager.hpp"
 #include "downloader.hpp"
 #include "paths.hpp"
+#include "thread_pool.hpp"
+#include "concurrent_queue.hpp"
+
 #include <nlohmann/json.hpp>
 
 #include <iostream>
 #include <fstream>
+#include <atomic>
+#include <mutex>
+#include <algorithm>
+#include <thread>
 
 using json = nlohmann::json;
 
@@ -12,14 +19,13 @@ namespace src
 {
     bool RegistryManager::update()
     {
-
-        Downloader downloader;
+        Downloader indexDownloader;
 
         std::string index;
 
         std::cout << "Pulling registry index\n";
 
-        if (!downloader.download(
+        if (!indexDownloader.download(
                 "https://cooper-src.github.io/src-registry/index.json",
                 index))
         {
@@ -33,25 +39,53 @@ namespace src
                   << registry["version"] << "\n\n";
 
         std::vector<std::string> manifests;
-        int updated = 0;
-        int failed = 0;
-        int current = 0;
+        std::atomic<int> updated = 0;
+        std::atomic<int> failed = 0;
+        std::atomic<int> current = 0;
         for (const auto &manifest : registry["manifests"])
         {
             manifests.push_back(manifest.get<std::string>());
         }
         int total = static_cast<int>(manifests.size());
+
+        ConcurrentQueue<std::string> queue;
+        std::mutex consoleMutex;
+
         for (const auto &manifest : manifests)
-
         {
-            ++current;
+            queue.push(manifest);
+        }
+        const unsigned workers = 1024;
 
-            std::cout << "\rUpdating manifests... ("
-                      << current
-                      << "/"
-                      << total
-                      << ")"
-                      << std::flush;
+        ThreadPool pool(workers);
+        for (unsigned i = 0; i < workers; i++)
+        {
+            pool.enqueue([&queue,
+                          &current,
+                          &updated,
+                          &failed,
+                          &consoleMutex,
+                          total]()
+                         {
+        Downloader downloader;
+
+        std::string manifest;
+
+        while (queue.pop(manifest))
+        {
+            int progress = ++current;
+
+            {
+                std::lock_guard<std::mutex> lock(consoleMutex);
+
+                std::cout
+                    << "\rUpdating manifests... ("
+                    << progress
+                    << "/"
+                    << total
+                    << ")"
+                    << std::flush;
+            }
 
             std::string data;
 
@@ -60,10 +94,19 @@ namespace src
                 manifest;
 
             if (!downloader.download(url, data))
-            {
-                ++failed;
-                continue;
-            }
+{
+    {
+        std::lock_guard<std::mutex> lock(consoleMutex);
+
+        std::cout
+            << "\nFAILED: "
+            << url
+            << '\n';
+    }
+
+    ++failed;
+    continue;
+}
 
             std::filesystem::path path =
                 Paths::registryDirectory() / manifest;
@@ -79,7 +122,13 @@ namespace src
             file << data;
 
             ++updated;
+        } });
         }
+
+        pool.wait();
+
+        std::cout << '\n';
+
         std::cout << '\n';
 
         if (failed == 0)
@@ -93,10 +142,8 @@ namespace src
 
         std::cout
             << "Manifests checked : " << total << '\n'
-            << "Updated           : " << updated << '\n'
-            << "Failed            : " << failed << '\n';
-
+            << "Updated           : " << updated.load() << '\n'
+            << "Failed            : " << failed.load() << '\n';
         return true;
     }
-
 }

@@ -25,8 +25,8 @@ add_executable(src
     src/download_progress.cpp
     src/task_progress.cpp
     src/extractor.cpp
-    third_party/miniz/miniz.c
     src/cleanup.cpp
+    src/thread_pool.cpp
 
     include/app.hpp
     include/command.hpp
@@ -34,7 +34,7 @@ add_executable(src
     include/package_manifest.hpp
     include/manifest_parser.hpp
 
-    
+    third_party/miniz/miniz.c
 )
 
 target_include_directories(src PRIVATE

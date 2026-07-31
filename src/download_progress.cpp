@@ -28,6 +28,12 @@ namespace src
         std::uint64_t total,
         double speed)
     {
+        if (downloaded > 0)
+        {
+            hasReceivedData = true;
+        }
+        started = true;
+        hasDrawn = true;
         double percent = 0.0;
 
         if (total > 0)
@@ -42,7 +48,6 @@ namespace src
 
         auto now = std::chrono::steady_clock::now();
 
-        // Limit redraws to ~30 FPS
         if (started &&
             downloaded != total &&
             now - lastFrame < std::chrono::milliseconds(33))
@@ -157,8 +162,33 @@ namespace src
 
     void DownloadProgress::finish()
     {
-        update(lastDownloaded, lastTotal, lastSpeed);
+        if (!hasReceivedData)
+            return;
+
         animationFrame = 0;
         std::cout << '\n';
+    }
+
+    int DownloadProgress::progressCallback(
+        void *clientp,
+        curl_off_t dltotal,
+        curl_off_t dlnow,
+        curl_off_t,
+        curl_off_t)
+    {
+        auto *progress =
+            static_cast<DownloadProgress *>(clientp);
+
+        if (dlnow < 1024)
+        {
+            return 0;
+        }
+
+        progress->update(
+            static_cast<std::uint64_t>(dlnow),
+            static_cast<std::uint64_t>(dltotal),
+            0.0);
+
+        return 0;
     }
 }

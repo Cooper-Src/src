@@ -125,7 +125,7 @@ Packages are stored in:
             return 0;
         }
 
-        std::cout << "Failed to install package.\n";
+        
         return 1;
     }
 

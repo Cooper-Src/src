@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <chrono>
 
+#include <curl/curl.h>
+
 namespace src
 {
     class DownloadProgress
@@ -16,9 +18,19 @@ namespace src
             double speed);
 
         void finish();
+        static int progressCallback(
+            void *clientp,
+            curl_off_t dltotal,
+            curl_off_t dlnow,
+            curl_off_t ultotal,
+            curl_off_t ulnow);
         std::size_t animationFrame = 0;
+
     private:
         bool started = false;
+        bool hasDrawn = false;
+        bool completed = false;
+        bool hasReceivedData = false;
 
         std::uint64_t lastBytes = 0;
 
